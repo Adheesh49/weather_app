@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Weather App</string>
+    <string name="enter_city">Enter city name</string>
+    <string name="search">Search</string>
+    <string name="weather_app">Weather App</string>
+    <string name="humidity">Humidity: %1$d%%</string>
+    <string name="wind">Wind: %1$.1f m/s</string>
+    <string name="temperature">%1$.1f°C</string>
+    <string name="forecast_format">%1$s: %2$.1f°C, %3$s</string>
+    <string name="forecast_title">3-Day Forecast</string>
+</resources>

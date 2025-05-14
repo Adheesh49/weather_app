@@ -1,0 +1,15 @@
+<resources>
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+        <item name="android:statusBarColor">@android:color/transparent</item>
+
+    </style>
+
+    <!-- Define colors used in the theme -->
+    <color name="colorPrimary">#FF9800</color> <!-- Orange, matching the gradient background -->
+    <color name="colorPrimaryDark">#F57C00</color> <!-- Darker orange for contrast -->
+    <color name="colorAccent">#FF5722</color> <!-- Accent color for buttons and highlights -->
+</resources>
