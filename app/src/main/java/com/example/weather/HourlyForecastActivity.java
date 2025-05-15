@@ -1,6 +1,10 @@
 package com.example.weather;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,6 +46,8 @@ public class HourlyForecastActivity extends AppCompatActivity {
     private String forecastData;
     private String selectedDay;
     private HashMap<String, ArrayList<HourlyForecastItem>> forecastByDay;
+    private static final String CHANNEL_ID = "SevereWeatherChannel";
+    private static final int NOTIFICATION_ID = 1;
 
     private final String API_KEY = "dad72bbf3ec207a8585ff3b7dcbcf9a8";
     private final String FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast";
@@ -62,6 +69,9 @@ public class HourlyForecastActivity extends AppCompatActivity {
             selectedDay = getDayOfWeek(new Date());
         }
 
+        // Create notification channel (required for Android 8.0+)
+        createNotificationChannel();
+
         if (city != null && forecastData != null) {
             new FetchHourlyForecastTask().execute();
         } else if (city != null) {
@@ -70,6 +80,33 @@ public class HourlyForecastActivity extends AppCompatActivity {
             Toast.makeText(this, "City not provided", Toast.LENGTH_SHORT).show();
             finish();
         }
+    }
+
+    private void createNotificationChannel() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID, "Severe Weather Alerts", NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("Notifications for severe weather alerts");
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void sendSevereWeatherNotification(String alertText) {
+        Intent intent = new Intent(this, HourlyForecastActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_notification) // Replace with your notification icon
+                .setContentTitle("Severe Weather Alert")
+                .setContentText(alertText)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(NOTIFICATION_ID, builder.build());
     }
 
     private class FetchCoordinatesTask extends AsyncTask<String, Void, double[]> {
@@ -171,11 +208,11 @@ public class HourlyForecastActivity extends AppCompatActivity {
                             String description = alert.getString("description");
                             String sender = alert.getString("sender_name");
 
-                            alertsText.append(event).append(" (")
-                                    .append(sdf.format(new Date(start))).append(" to ")
-                                    .append(sdf.format(new Date(end))).append(")\n")
-                                    .append(description).append("\n")
-                                    .append("Issued by: ").append(sender).append("\n\n");
+                            String alertSummary = event + " (from " + sdf.format(new Date(start)) + " to " + sdf.format(new Date(end)) + ")";
+                            alertsText.append(alertSummary).append("\n").append(description).append("\nIssued by: ").append(sender).append("\n\n");
+
+                            // Send notification for each alert
+                            sendSevereWeatherNotification(alertSummary + ". Check app for details.");
                         }
                         tvSevereWeatherAlerts.setText(alertsText.toString().trim());
                     } else {
