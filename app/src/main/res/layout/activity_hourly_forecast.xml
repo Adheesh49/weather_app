@@ -3,28 +3,24 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@drawable/hourly_forecast_gradient">
+    android:padding="16dp">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/tvSevereWeatherAlerts"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Hourly Forecast"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#FFFFFF"
-        android:layout_gravity="center"
-        android:paddingBottom="12dp"/>
+        android:text="No severe weather alerts"
+        android:textColor="#F4ECEC"
+        android:textSize="16sp"
+        android:padding="8dp"
+        android:background="#EF0101"
+        android:layout_marginBottom="8dp"
+        android:visibility="visible"/>
 
     <ListView
         android:id="@+id/lvHourlyForecast"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:divider="@android:color/white"
-        android:dividerHeight="1dp"
-        android:background="#E0F7FA"
-        android:padding="8dp"
-        android:clipToPadding="false"/>
+        android:layout_weight="1"/>
 
 </LinearLayout>

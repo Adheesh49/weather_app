@@ -108,26 +108,6 @@
                 android:layout_marginTop="8dp"
                 android:textSize="16sp" />
 
-            <!-- Severe weather alert -->
-            <LinearLayout
-                android:id="@+id/alertSection"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone"
-                android:layout_marginTop="16dp"
-                android:background="@android:color/holo_red_light"
-                android:padding="8dp">
-
-                <TextView
-                    android:id="@+id/tvAlert"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/white" />
-            </LinearLayout>
-
             <!-- 3-Day forecast section -->
             <LinearLayout
                 android:id="@+id/forecastSection"
@@ -215,6 +195,7 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- ProgressBar -->
             <ProgressBar
                 android:id="@+id/progressBar"
                 android:layout_width="wrap_content"
@@ -222,6 +203,7 @@
                 android:layout_gravity="center"
                 android:layout_marginTop="16dp"
                 android:visibility="gone" />
+
             <!-- Weather map -->
             <ImageView
                 android:id="@+id/ivWeatherMap"
@@ -230,7 +212,26 @@
                 android:layout_marginTop="16dp"
                 android:contentDescription="Weather Map"
                 android:scaleType="centerCrop" />
-        </LinearLayout>
 
+            <!-- Severe weather alert -->
+            <LinearLayout
+                android:id="@+id/alertSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="16dp"
+                android:background="@android:color/holo_red_light"
+                android:padding="8dp">
+
+                <TextView
+                    android:id="@+id/tvAlert"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+        </LinearLayout>
     </ScrollView>
 </RelativeLayout>

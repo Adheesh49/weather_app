@@ -36,6 +36,7 @@ import java.util.Locale;
 public class HourlyForecastActivity extends AppCompatActivity {
 
     private ListView lvHourlyForecast;
+    private TextView tvSevereWeatherAlerts;
     private String city;
     private String forecastData;
     private String selectedDay;
@@ -43,6 +44,8 @@ public class HourlyForecastActivity extends AppCompatActivity {
 
     private final String API_KEY = "dad72bbf3ec207a8585ff3b7dcbcf9a8";
     private final String FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast";
+    private final String GEOCODING_URL = "http://api.openweathermap.org/geo/1.0/direct";
+    private final String ONECALL_URL = "https://api.openweathermap.org/data/2.5/onecall";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +53,7 @@ public class HourlyForecastActivity extends AppCompatActivity {
         setContentView(R.layout.activity_hourly_forecast);
 
         lvHourlyForecast = findViewById(R.id.lvHourlyForecast);
+        tvSevereWeatherAlerts = findViewById(R.id.tvSevereWeatherAlerts);
         city = getIntent().getStringExtra("city");
         forecastData = getIntent().getStringExtra("forecast_data");
 
@@ -61,10 +65,129 @@ public class HourlyForecastActivity extends AppCompatActivity {
         if (city != null && forecastData != null) {
             new FetchHourlyForecastTask().execute();
         } else if (city != null) {
-            new FetchHourlyForecastTask().execute(city);
+            new FetchCoordinatesTask().execute(city);
         } else {
             Toast.makeText(this, "City not provided", Toast.LENGTH_SHORT).show();
             finish();
+        }
+    }
+
+    private class FetchCoordinatesTask extends AsyncTask<String, Void, double[]> {
+        @Override
+        protected double[] doInBackground(String... params) {
+            String city = params[0];
+            String urlString = GEOCODING_URL + "?q=" + city + "&limit=1&appid=" + API_KEY;
+
+            try {
+                URL url = new URL(urlString);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(10000);
+                connection.connect();
+
+                InputStream inputStream = connection.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                String result = response.toString();
+                Log.d("WeatherApp", "Geocoding API Response: " + result);
+
+                JSONArray jsonArray = new JSONArray(result);
+                if (jsonArray.length() > 0) {
+                    JSONObject cityData = jsonArray.getJSONObject(0);
+                    double lat = cityData.getDouble("lat");
+                    double lon = cityData.getDouble("lon");
+                    return new double[]{lat, lon};
+                }
+            } catch (IOException | JSONException e) {
+                Log.e("WeatherApp", "Geocoding fetch error: " + e.getMessage());
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(double[] coordinates) {
+            if (coordinates != null) {
+                double lat = coordinates[0];
+                double lon = coordinates[1];
+                new FetchSevereWeatherAlertsTask().execute(lat, lon);
+                new FetchHourlyForecastTask().execute(city);
+            } else {
+                Toast.makeText(HourlyForecastActivity.this, "Error fetching city coordinates", Toast.LENGTH_SHORT).show();
+                tvSevereWeatherAlerts.setText("Unable to fetch severe weather alerts");
+                new FetchHourlyForecastTask().execute(city);
+            }
+        }
+    }
+
+    private class FetchSevereWeatherAlertsTask extends AsyncTask<Double, Void, String> {
+        @Override
+        protected String doInBackground(Double... params) {
+            double lat = params[0];
+            double lon = params[1];
+            String urlString = ONECALL_URL + "?lat=" + lat + "&lon=" + lon + "&exclude=hourly,daily,minutely,current&appid=" + API_KEY;
+
+            try {
+                URL url = new URL(urlString);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(10000);
+                connection.connect();
+
+                InputStream inputStream = connection.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                return response.toString();
+            } catch (IOException e) {
+                Log.e("WeatherApp", "Severe weather alerts fetch error: " + e.getMessage());
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            if (result != null) {
+                try {
+                    JSONObject jsonObject = new JSONObject(result);
+                    if (jsonObject.has("alerts")) {
+                        JSONArray alertsArray = jsonObject.getJSONArray("alerts");
+                        StringBuilder alertsText = new StringBuilder();
+                        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+
+                        for (int i = 0; i < alertsArray.length(); i++) {
+                            JSONObject alert = alertsArray.getJSONObject(i);
+                            String event = alert.getString("event");
+                            long start = alert.getLong("start") * 1000;
+                            long end = alert.getLong("end") * 1000;
+                            String description = alert.getString("description");
+                            String sender = alert.getString("sender_name");
+
+                            alertsText.append(event).append(" (")
+                                    .append(sdf.format(new Date(start))).append(" to ")
+                                    .append(sdf.format(new Date(end))).append(")\n")
+                                    .append(description).append("\n")
+                                    .append("Issued by: ").append(sender).append("\n\n");
+                        }
+                        tvSevereWeatherAlerts.setText(alertsText.toString().trim());
+                    } else {
+                        tvSevereWeatherAlerts.setText("No severe weather alerts");
+                    }
+                } catch (JSONException e) {
+                    Log.e("WeatherApp", "Severe weather alerts parsing error: " + e.getMessage());
+                    tvSevereWeatherAlerts.setText("Error parsing severe weather alerts");
+                }
+            } else {
+                tvSevereWeatherAlerts.setText("Error fetching severe weather alerts");
+            }
         }
     }
 
@@ -207,56 +330,39 @@ public class HourlyForecastActivity extends AppCompatActivity {
         int resourceId;
 
         try {
-            // Log weather data for debugging
             Log.d("WeatherApp", "Weather - Time: " + description + ", Weather ID: " + weatherId + ", Icon Code: " + iconCode);
 
-            // Determine if it's day or night based on the forecast time
             boolean isDayTime = isDayTime(forecastDate);
             Log.d("WeatherApp", "Forecast Time: " + forecastDate + ", Is Daytime: " + isDayTime);
 
-            // Check for windy conditions first (e.g., wind speed > 10 m/s)
             if (windSpeed > 10) {
                 resourceId = R.drawable.windy_icon;
-            }
-            // Thunderstorm
-            else if (weatherId >= 200 && weatherId < 300) {
+            } else if (weatherId >= 200 && weatherId < 300) {
                 resourceId = R.drawable.thunder_icon;
-            }
-            // Drizzle
-            else if (weatherId >= 300 && weatherId < 400) {
+            } else if (weatherId >= 300 && weatherId < 400) {
                 resourceId = R.drawable.rain_icon;
-            }
-            // Rain
-            else if (weatherId >= 500 && weatherId < 600) {
+            } else if (weatherId >= 500 && weatherId < 600) {
                 if (weatherId == 500 || weatherId == 501 || description.toLowerCase().contains("light rain")) {
                     resourceId = R.drawable.light_rain_icon;
                 } else {
                     resourceId = R.drawable.heavy_rain_icon;
                 }
-            }
-            // Snow
-            else if (weatherId >= 600 && weatherId < 700) {
+            } else if (weatherId >= 600 && weatherId < 700) {
                 resourceId = R.drawable.snow_icon;
-            }
-            // Atmosphere (mist, fog, haze, etc.)
-            else if (weatherId >= 700 && weatherId < 800) {
+            } else if (weatherId >= 700 && weatherId < 800) {
                 if (weatherId == 741 || description.toLowerCase().contains("fog")) {
                     resourceId = R.drawable.fog_icon;
                 } else {
                     resourceId = R.drawable.mist_icon;
                 }
-            }
-            // Clear
-            else if (weatherId == 800) {
+            } else if (weatherId == 800) {
                 if (isDayTime) {
                     resourceId = R.drawable.sun_icon;
                 } else {
                     resourceId = R.drawable.moon_icon;
                 }
-            }
-            // Clouds
-            else if (weatherId > 800) {
-                if (weatherId == 801) { // Few clouds
+            } else if (weatherId > 800) {
+                if (weatherId == 801) {
                     resourceId = R.drawable.partly_cloudy_icon;
                 } else if (weatherId == 802 || weatherId == 803 || weatherId == 804) {
                     if (description.toLowerCase().contains("broken clouds")) {
@@ -267,15 +373,13 @@ public class HourlyForecastActivity extends AppCompatActivity {
                 } else {
                     resourceId = R.drawable.cloud_icon;
                 }
-            }
-            // Default
-            else {
+            } else {
                 resourceId = R.drawable.sun_icon;
             }
             imageView.setImageResource(resourceId);
         } catch (Exception e) {
             Log.w("WeatherApp", "Icon resource not found for " + description + ": " + e.getMessage());
-            imageView.setImageResource(R.drawable.cloud_icon); // Fallback to cloud icon
+            imageView.setImageResource(R.drawable.cloud_icon);
         }
     }
 
@@ -283,7 +387,6 @@ public class HourlyForecastActivity extends AppCompatActivity {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(forecastDate);
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        // Approximate sunrise at 6:00 AM and sunset at 6:00 PM
         return hour >= 6 && hour < 18;
     }
 
@@ -304,7 +407,7 @@ public class HourlyForecastActivity extends AppCompatActivity {
         if (forecastByDay != null) {
             updateForecastList(forecastByDay.getOrDefault(selectedDay, new ArrayList<>()));
         } else {
-            new FetchHourlyForecastTask().execute();
+            new FetchCoordinatesTask().execute(city);
         }
     }
 }
