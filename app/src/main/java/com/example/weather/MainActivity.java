@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getSupportActionBar().hide(); // Hide the ActionBar to remove the "Weather App" title
 
         // Initialize UI components
         etCityName = findViewById(R.id.etCityName);
