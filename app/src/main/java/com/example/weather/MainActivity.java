@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -18,6 +19,12 @@ import android.widget.Toast;
 import android.animation.ValueAnimator;
 
 import androidx.appcompat.app.AppCompatActivity;
+// --- ADD THESE IMPORTS FOR STATUS BAR COLORING ---
+import android.os.Build;
+import android.view.Window;
+import android.view.WindowManager;
+import androidx.core.content.ContextCompat;
+// --- END OF ADDED IMPORTS ---
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -73,8 +80,29 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.my_app_green));
+
+        }
+
         setContentView(R.layout.activity_main);
-        getSupportActionBar().hide(); // Hide the ActionBar to remove the "Weather App" title
+        getSupportActionBar().hide();
+
+
+        // Adjust status bar placeholder height dynamically
+        int statusBarHeight = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+        }
+        View statusBarPlaceholder = findViewById(R.id.statusBarPlaceholder);
+        ViewGroup.LayoutParams params = statusBarPlaceholder.getLayoutParams();
+        params.height = statusBarHeight;
+        statusBarPlaceholder.setLayoutParams(params);
 
         // Initialize UI components
         etCityName = findViewById(R.id.etCityName);
@@ -126,10 +154,10 @@ public class MainActivity extends AppCompatActivity {
                     progressBar.setVisibility(View.VISIBLE);
                     fetchWeatherData(city);
                 } else {
-                    Toast.makeText(MainActivity.this, "Invalid city name", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.invalid_city_name, Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(MainActivity.this, "Please enter a city name", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, R.string.enter_city_name, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -149,13 +177,13 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                     } catch (Exception e) {
                         Log.e("WeatherApp", "Error launching HourlyForecastActivity: " + e.getMessage());
-                        Toast.makeText(MainActivity.this, "Failed to open hourly forecast", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, R.string.error_hourly_forecast, Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(MainActivity.this, "Forecast data not available. Please search again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.no_forecast_data, Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(MainActivity.this, "Please enter a city name first", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, R.string.enter_city_name_first, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -254,8 +282,8 @@ public class MainActivity extends AppCompatActivity {
                     tvCityName.setText(cityName + ", " + country);
                     tvTemperature.setText(String.format("%.1f°C", temperature));
                     tvDescription.setText(capitalizeFirstLetter(description));
-                    tvHumidity.setText("Humidity: " + humidity + "%");
-                    tvWind.setText("Wind: " + windSpeed + " m/s");
+                    tvHumidity.setText(getString(R.string.humidity_template, humidity));
+                    tvWind.setText(getString(R.string.wind_template, windSpeed));
 
                     setWeatherIcon(iconCode);
                     updateBackground(iconCode);
@@ -265,10 +293,10 @@ public class MainActivity extends AppCompatActivity {
 
                 } catch (JSONException e) {
                     Log.e("WeatherApp", "JSON parsing error: " + e.getMessage());
-                    Toast.makeText(MainActivity.this, "JSON parsing error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.json_parsing_error, Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(MainActivity.this, "Error fetching weather data", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, R.string.error_fetching_weather, Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -337,10 +365,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } catch (JSONException e) {
                     Log.e("WeatherApp", "Severe weather alerts parsing error: " + e.getMessage());
-                    alertsText = "Error parsing severe weather alerts";
+                    alertsText = getString(R.string.error_parsing_alerts);
                 }
             } else {
-                alertsText = "Error fetching severe weather alerts";
+                alertsText = getString(R.string.error_fetching_alerts);
             }
 
             if (callback != null) {
@@ -427,10 +455,10 @@ public class MainActivity extends AppCompatActivity {
 
                 } catch (Exception e) {
                     Log.e("WeatherApp", "Forecast parsing error: " + e.getMessage());
-                    Toast.makeText(MainActivity.this, "Forecast parsing error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.forecast_parsing_error, Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(MainActivity.this, "Error fetching forecast data", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, R.string.error_fetching_forecast, Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -479,7 +507,7 @@ public class MainActivity extends AppCompatActivity {
                 ivWeatherMap.setImageBitmap(bitmap);
             } else {
                 ivWeatherMap.setImageResource(android.R.drawable.ic_menu_gallery);
-                Toast.makeText(MainActivity.this, "Error fetching weather map", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, R.string.error_fetching_map, Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -597,10 +625,10 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             } catch (Exception e) {
                 Log.e("WeatherApp", "Error launching HourlyForecastActivity: " + e.getMessage());
-                Toast.makeText(MainActivity.this, "Failed to open hourly forecast", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, R.string.error_hourly_forecast, Toast.LENGTH_SHORT).show();
             }
         } else {
-            Toast.makeText(MainActivity.this, "Forecast data not available. Please search again.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, R.string.no_forecast_data, Toast.LENGTH_SHORT).show();
         }
     }
 }

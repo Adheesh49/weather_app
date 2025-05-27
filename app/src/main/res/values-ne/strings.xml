@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">मौसम एप</string>
+    <string name="hint_city_name">सहरको नाम प्रविष्ट गर्नुहोस्</string>
+    <string name="btn_search">खोज्नुहोस्</string>
+    <string name="forecast_title">३-दिन मौसम पूर्वानुमान</string>
+    <string name="invalid_city_name">अवैध सहरको नाम</string>
+    <string name="enter_city_name">कृपया सहरको नाम प्रविष्ट गर्नुहोस्</string>
+    <string name="error_hourly_forecast">हवाइ पूर्वानुमान खोल्न असफल</string>
+    <string name="no_forecast_data">मौसम डेटा उपलब्ध छैन। कृपया पुनः खोज्नुहोस्।</string>
+    <string name="enter_city_name_first">कृपया पहिले सहरको नाम प्रविष्ट गर्नुहोस्</string>
+    <string name="json_parsing_error">JSON पार्सिङ त्रुटि</string>
+    <string name="error_fetching_weather">मौसम डेटा ल्याउन त्रुटि</string>
+    <string name="error_parsing_alerts">गम्भीर मौसम चेतावनी पार्स गर्न त्रुटि</string>
+    <string name="error_fetching_alerts">गम्भीर मौसम चेतावनी ल्याउन त्रुटि</string>
+    <string name="forecast_parsing_error">मौसम पूर्वानुमान पार्सिङ त्रुटि</string>
+    <string name="error_fetching_forecast">मौसम पूर्वानुमान डेटा ल्याउन त्रुटि</string>
+    <string name="error_fetching_map">मौसम नक्शा ल्याउन त्रुटि</string>
+    <!-- Dynamic text templates -->
+    <string name="humidity_template">आर्द्रता: %d%%</string>
+    <string name="wind_template">हावा: %.1f मि/से</string>
+</resources>

@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Weather App</string>
-    <string name="enter_city">Enter city name</string>
-    <string name="search">Search</string>
-    <string name="weather_app">Weather App</string>
-    <string name="humidity">Humidity: %1$d%%</string>
-    <string name="wind">Wind: %1$.1f m/s</string>
-    <string name="temperature">%1$.1f°C</string>
-    <string name="forecast_format">%1$s: %2$.1f°C, %3$s</string>
+    <string name="hint_city_name">Enter city name</string>
+    <string name="btn_search">Search</string>
     <string name="forecast_title">3-Day Forecast</string>
+    <string name="invalid_city_name">Invalid city name</string>
+    <string name="enter_city_name">Please enter a city name</string>
+    <string name="error_hourly_forecast">Failed to open hourly forecast</string>
+    <string name="no_forecast_data">Forecast data not available. Please search again.</string>
+    <string name="enter_city_name_first">Please enter a city name first</string>
+    <string name="json_parsing_error">JSON parsing error</string>
+    <string name="error_fetching_weather">Error fetching weather data</string>
+    <string name="error_parsing_alerts">Error parsing severe weather alerts</string>
+    <string name="error_fetching_alerts">Error fetching severe weather alerts</string>
+    <string name="forecast_parsing_error">Forecast parsing error</string>
+    <string name="error_fetching_forecast">Error fetching forecast data</string>
+    <string name="error_fetching_map">Error fetching weather map</string>
+    <!-- Dynamic text templates -->
+    <string name="humidity_template">Humidity: %d%%</string>
+    <string name="wind_template">Wind: %.1f m/s</string>
 </resources>

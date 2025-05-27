@@ -2,26 +2,50 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:orientation="vertical">
+
+    <View
+        android:id="@+id/statusBarPlaceholderHourly"
+        android:layout_width="match_parent"
+        android:layout_height="0dp" />
 
     <TextView
-        android:id="@+id/tvSevereWeatherAlerts"
+        android:id="@+id/tvHourlyHeaderCustom"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="No severe weather alerts"
-        android:textColor="#F4ECEC"
-        android:textSize="16sp"
-        android:padding="8dp"
-        android:background="#EF0101"
-        android:layout_marginBottom="8dp"
-        android:visibility="visible"/>
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/my_app_green"
+        android:text="Hourly Forecast"
+        android:textColor="@android:color/white"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"/>
 
-    <ListView
-        android:id="@+id/lvHourlyForecast"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@color/white" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
+        <TextView
+            android:id="@+id/tvSevereWeatherAlerts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No severe weather alerts"
+            android:textColor="#F4ECEC"
+            android:textSize="16sp"
+            android:padding="8dp"
+            android:background="#EF0101"
+            android:layout_marginBottom="8dp"
+            android:visibility="visible"/>
+
+        <ListView
+            android:id="@+id/lvHourlyForecast"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@color/white" />
+    </LinearLayout>
 </LinearLayout>

@@ -5,7 +5,9 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,10 +17,12 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -57,38 +61,106 @@ public class HourlyForecastActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Enable edge-to-edge display and make status bar transparent
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
         setContentView(R.layout.activity_hourly_forecast);
+
+        // Adjust status bar placeholder height dynamically using WindowInsets
+        final View statusBarPlaceholder = findViewById(R.id.statusBarPlaceholderHourly);
+        ViewCompat.setOnApplyWindowInsetsListener(statusBarPlaceholder, (v, windowInsets) -> {
+            androidx.core.graphics.Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            ViewGroup.LayoutParams params = v.getLayoutParams();
+            params.height = insets.top;
+            v.setLayoutParams(params);
+            return windowInsets;
+        });
 
         lvHourlyForecast = findViewById(R.id.lvHourlyForecast);
         tvSevereWeatherAlerts = findViewById(R.id.tvSevereWeatherAlerts);
         city = getIntent().getStringExtra("city");
         forecastData = getIntent().getStringExtra("forecast_data");
-
         selectedDay = getIntent().getStringExtra("selected_day");
+
         if (selectedDay == null) {
             selectedDay = getDayOfWeek(new Date());
         }
 
-        // Create notification channel (required for Android 8.0+)
         createNotificationChannel();
 
         if (city != null && forecastData != null) {
-            new FetchHourlyForecastTask().execute();
+            new FetchCoordinatesTask().execute(city);
+            processPassedForecastData(forecastData);
         } else if (city != null) {
             new FetchCoordinatesTask().execute(city);
         } else {
-            Toast.makeText(this, "City not provided", Toast.LENGTH_SHORT).show();
+            if (tvSevereWeatherAlerts != null) tvSevereWeatherAlerts.setText("City not provided. Cannot fetch data.");
             finish();
         }
     }
 
+    private void processPassedForecastData(String data) {
+        if (data != null) {
+            try {
+                HashMap<String, ArrayList<HourlyForecastItem>> parsedData = parseForecastData(data);
+                if (parsedData != null) {
+                    forecastByDay = parsedData;
+                    updateForecastList(forecastByDay.getOrDefault(selectedDay, new ArrayList<>()));
+                } else {
+                    if (tvSevereWeatherAlerts != null) tvSevereWeatherAlerts.setText("Error parsing provided forecast data");
+                }
+            } catch (Exception e) {
+                Log.e("WeatherApp", "Error processing passed forecast data: " + e.getMessage());
+                if (tvSevereWeatherAlerts != null) tvSevereWeatherAlerts.setText("Error processing forecast");
+            }
+        }
+    }
+
+    private HashMap<String, ArrayList<HourlyForecastItem>> parseForecastData(String jsonData) {
+        try {
+            HashMap<String, ArrayList<HourlyForecastItem>> forecastMap = new HashMap<>();
+            JSONObject jsonObject = new JSONObject(jsonData);
+            JSONArray listArray = jsonObject.getJSONArray("list");
+            SimpleDateFormat sdfInput = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            SimpleDateFormat sdfDay = new SimpleDateFormat("EEEE", Locale.getDefault());
+            SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+            for (int i = 0; i < listArray.length(); i++) {
+                JSONObject forecastObj = listArray.getJSONObject(i);
+                String dtTxt = forecastObj.getString("dt_txt");
+                Date date = sdfInput.parse(dtTxt);
+                String day = sdfDay.format(date);
+                double temp = forecastObj.getJSONObject("main").getDouble("temp");
+                String desc = forecastObj.getJSONArray("weather").getJSONObject(0).getString("description");
+                int weatherId = forecastObj.getJSONArray("weather").getJSONObject(0).getInt("id");
+                String iconCode = forecastObj.getJSONArray("weather").getJSONObject(0).getString("icon");
+                double windSpeed = forecastObj.getJSONObject("wind").getDouble("speed");
+                String time = sdfTime.format(date);
+                HourlyForecastItem item = new HourlyForecastItem(time, day, temp, desc, weatherId, iconCode, windSpeed, date);
+                forecastMap.computeIfAbsent(day, k -> new ArrayList<>()).add(item);
+            }
+            return forecastMap;
+        } catch (JSONException | ParseException e) {
+            Log.e("WeatherApp", "JSON or date parsing error in parseForecastData: " + e.getMessage());
+            return null;
+        }
+    }
+
     private void createNotificationChannel() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID, "Severe Weather Alerts", NotificationManager.IMPORTANCE_HIGH);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Severe Weather Alerts", NotificationManager.IMPORTANCE_HIGH);
             channel.setDescription("Notifications for severe weather alerts");
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
         }
     }
 
@@ -96,7 +168,6 @@ public class HourlyForecastActivity extends AppCompatActivity {
         Intent intent = new Intent(this, HourlyForecastActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle("Severe Weather Alert")
@@ -104,17 +175,17 @@ public class HourlyForecastActivity extends AppCompatActivity {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
-
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(NOTIFICATION_ID, builder.build());
+        if (notificationManager != null) {
+            notificationManager.notify(NOTIFICATION_ID, builder.build());
+        }
     }
 
     private class FetchCoordinatesTask extends AsyncTask<String, Void, double[]> {
         @Override
         protected double[] doInBackground(String... params) {
-            String city = params[0];
-            String urlString = GEOCODING_URL + "?q=" + city + "&limit=1&appid=" + API_KEY;
-
+            String cityToGeocode = params[0];
+            String urlString = GEOCODING_URL + "?q=" + cityToGeocode + "&limit=1&appid=" + API_KEY;
             try {
                 URL url = new URL(urlString);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -122,7 +193,6 @@ public class HourlyForecastActivity extends AppCompatActivity {
                 connection.setConnectTimeout(10000);
                 connection.setReadTimeout(10000);
                 connection.connect();
-
                 InputStream inputStream = connection.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                 StringBuilder response = new StringBuilder();
@@ -130,15 +200,10 @@ public class HourlyForecastActivity extends AppCompatActivity {
                 while ((line = reader.readLine()) != null) {
                     response.append(line);
                 }
-                String result = response.toString();
-                Log.d("WeatherApp", "Geocoding API Response: " + result);
-
-                JSONArray jsonArray = new JSONArray(result);
+                JSONArray jsonArray = new JSONArray(response.toString());
                 if (jsonArray.length() > 0) {
                     JSONObject cityData = jsonArray.getJSONObject(0);
-                    double lat = cityData.getDouble("lat");
-                    double lon = cityData.getDouble("lon");
-                    return new double[]{lat, lon};
+                    return new double[]{cityData.getDouble("lat"), cityData.getDouble("lon")};
                 }
             } catch (IOException | JSONException e) {
                 Log.e("WeatherApp", "Geocoding fetch error: " + e.getMessage());
@@ -149,14 +214,11 @@ public class HourlyForecastActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(double[] coordinates) {
             if (coordinates != null) {
-                double lat = coordinates[0];
-                double lon = coordinates[1];
-                new FetchSevereWeatherAlertsTask().execute(lat, lon);
-                new FetchHourlyForecastTask().execute(city);
+                new FetchSevereWeatherAlertsTask().execute(coordinates[0], coordinates[1]);
+                if (forecastData == null) new FetchHourlyForecastTask().execute(city);
             } else {
-                Toast.makeText(HourlyForecastActivity.this, "Error fetching city coordinates", Toast.LENGTH_SHORT).show();
-                tvSevereWeatherAlerts.setText("Unable to fetch severe weather alerts");
-                new FetchHourlyForecastTask().execute(city);
+                if (tvSevereWeatherAlerts != null) tvSevereWeatherAlerts.setText("Unable to fetch severe weather alerts");
+                if (forecastData == null) new FetchHourlyForecastTask().execute(city);
             }
         }
     }
@@ -164,10 +226,7 @@ public class HourlyForecastActivity extends AppCompatActivity {
     private class FetchSevereWeatherAlertsTask extends AsyncTask<Double, Void, String> {
         @Override
         protected String doInBackground(Double... params) {
-            double lat = params[0];
-            double lon = params[1];
-            String urlString = ONECALL_URL + "?lat=" + lat + "&lon=" + lon + "&exclude=hourly,daily,minutely,current&appid=" + API_KEY;
-
+            String urlString = ONECALL_URL + "?lat=" + params[0] + "&lon=" + params[1] + "&exclude=hourly,daily,minutely,current&appid=" + API_KEY;
             try {
                 URL url = new URL(urlString);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -175,7 +234,6 @@ public class HourlyForecastActivity extends AppCompatActivity {
                 connection.setConnectTimeout(10000);
                 connection.setReadTimeout(10000);
                 connection.connect();
-
                 InputStream inputStream = connection.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                 StringBuilder response = new StringBuilder();
@@ -186,44 +244,50 @@ public class HourlyForecastActivity extends AppCompatActivity {
                 return response.toString();
             } catch (IOException e) {
                 Log.e("WeatherApp", "Severe weather alerts fetch error: " + e.getMessage());
-                return null;
             }
+            return null;
         }
 
         @Override
         protected void onPostExecute(String result) {
+            if (tvSevereWeatherAlerts == null) return;
             if (result != null) {
                 try {
                     JSONObject jsonObject = new JSONObject(result);
                     if (jsonObject.has("alerts")) {
                         JSONArray alertsArray = jsonObject.getJSONArray("alerts");
-                        StringBuilder alertsText = new StringBuilder();
-                        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
-
-                        for (int i = 0; i < alertsArray.length(); i++) {
-                            JSONObject alert = alertsArray.getJSONObject(i);
-                            String event = alert.getString("event");
-                            long start = alert.getLong("start") * 1000;
-                            long end = alert.getLong("end") * 1000;
-                            String description = alert.getString("description");
-                            String sender = alert.getString("sender_name");
-
-                            String alertSummary = event + " (from " + sdf.format(new Date(start)) + " to " + sdf.format(new Date(end)) + ")";
-                            alertsText.append(alertSummary).append("\n").append(description).append("\nIssued by: ").append(sender).append("\n\n");
-
-                            // Send notification for each alert
-                            sendSevereWeatherNotification(alertSummary + ". Check app for details.");
+                        if (alertsArray.length() > 0) {
+                            StringBuilder alertsText = new StringBuilder();
+                            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault());
+                            for (int i = 0; i < alertsArray.length(); i++) {
+                                JSONObject alert = alertsArray.getJSONObject(i);
+                                String event = alert.getString("event");
+                                long start = alert.getLong("start") * 1000;
+                                long end = alert.getLong("end") * 1000;
+                                String description = alert.optString("description", "No description available.");
+                                String sender = alert.optString("sender_name", "Unknown sender");
+                                String alertSummary = event + " (from " + sdf.format(new Date(start)) + " to " + sdf.format(new Date(end)) + ")";
+                                alertsText.append(alertSummary).append("\n").append(description).append("\nIssued by: ").append(sender).append("\n\n");
+                                sendSevereWeatherNotification(alertSummary + ". Check app for details.");
+                            }
+                            tvSevereWeatherAlerts.setText(alertsText.toString().trim());
+                            tvSevereWeatherAlerts.setVisibility(View.VISIBLE);
+                        } else {
+                            tvSevereWeatherAlerts.setText("No severe weather alerts");
+                            tvSevereWeatherAlerts.setVisibility(View.VISIBLE);
                         }
-                        tvSevereWeatherAlerts.setText(alertsText.toString().trim());
                     } else {
                         tvSevereWeatherAlerts.setText("No severe weather alerts");
+                        tvSevereWeatherAlerts.setVisibility(View.VISIBLE);
                     }
                 } catch (JSONException e) {
                     Log.e("WeatherApp", "Severe weather alerts parsing error: " + e.getMessage());
                     tvSevereWeatherAlerts.setText("Error parsing severe weather alerts");
+                    tvSevereWeatherAlerts.setVisibility(View.VISIBLE);
                 }
             } else {
                 tvSevereWeatherAlerts.setText("Error fetching severe weather alerts");
+                tvSevereWeatherAlerts.setVisibility(View.VISIBLE);
             }
         }
     }
@@ -231,11 +295,10 @@ public class HourlyForecastActivity extends AppCompatActivity {
     private class FetchHourlyForecastTask extends AsyncTask<String, Void, HashMap<String, ArrayList<HourlyForecastItem>>> {
         @Override
         protected HashMap<String, ArrayList<HourlyForecastItem>> doInBackground(String... params) {
-            String city = params.length > 0 ? params[0] : null;
-            String urlString = city != null ? FORECAST_URL + "?q=" + city + "&units=metric&cnt=40&appid=" + API_KEY : null;
-            String result = forecastData;
-
-            if (result == null && city != null) {
+            String cityForFetch = params.length > 0 ? params[0] : null;
+            String resultJson = null;
+            if (cityForFetch != null) {
+                String urlString = FORECAST_URL + "?q=" + cityForFetch + "&units=metric&cnt=40&appid=" + API_KEY;
                 try {
                     URL url = new URL(urlString);
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -243,7 +306,6 @@ public class HourlyForecastActivity extends AppCompatActivity {
                     connection.setConnectTimeout(10000);
                     connection.setReadTimeout(10000);
                     connection.connect();
-
                     InputStream inputStream = connection.getInputStream();
                     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                     StringBuilder response = new StringBuilder();
@@ -251,47 +313,13 @@ public class HourlyForecastActivity extends AppCompatActivity {
                     while ((line = reader.readLine()) != null) {
                         response.append(line);
                     }
-                    result = response.toString();
-                    Log.d("WeatherApp", "API Response: " + result);
+                    resultJson = response.toString();
                 } catch (IOException e) {
                     Log.e("WeatherApp", "Hourly forecast fetch error: " + e.getMessage());
                     return null;
                 }
             }
-
-            if (result != null) {
-                try {
-                    HashMap<String, ArrayList<HourlyForecastItem>> forecastByDay = new HashMap<>();
-                    JSONObject jsonObject = new JSONObject(result);
-                    JSONArray listArray = jsonObject.getJSONArray("list");
-
-                    SimpleDateFormat sdfInput = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-                    SimpleDateFormat sdfDay = new SimpleDateFormat("EEEE", Locale.getDefault());
-                    SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm", Locale.getDefault());
-
-                    for (int i = 0; i < listArray.length(); i++) {
-                        JSONObject forecastObj = listArray.getJSONObject(i);
-                        String dtTxt = forecastObj.getString("dt_txt");
-                        Date date = sdfInput.parse(dtTxt);
-                        String day = sdfDay.format(date);
-                        double temp = forecastObj.getJSONObject("main").getDouble("temp");
-                        String desc = forecastObj.getJSONArray("weather").getJSONObject(0).getString("description");
-                        int weatherId = forecastObj.getJSONArray("weather").getJSONObject(0).getInt("id");
-                        String iconCode = forecastObj.getJSONArray("weather").getJSONObject(0).getString("icon");
-                        double windSpeed = forecastObj.getJSONObject("wind").getDouble("speed");
-                        String time = sdfTime.format(date);
-
-                        HourlyForecastItem item = new HourlyForecastItem(time, day, temp, desc, weatherId, iconCode, windSpeed, date);
-                        forecastByDay.computeIfAbsent(day, k -> new ArrayList<>()).add(item);
-                    }
-
-                    return forecastByDay;
-                } catch (JSONException | ParseException e) {
-                    Log.e("WeatherApp", "JSON or date parsing error: " + e.getMessage());
-                    return null;
-                }
-            }
-            return null;
+            return (resultJson != null) ? parseForecastData(resultJson) : null;
         }
 
         @Override
@@ -300,47 +328,41 @@ public class HourlyForecastActivity extends AppCompatActivity {
                 forecastByDay = result;
                 updateForecastList(forecastByDay.getOrDefault(selectedDay, new ArrayList<>()));
             } else {
-                Toast.makeText(HourlyForecastActivity.this, "Error fetching hourly forecast", Toast.LENGTH_SHORT).show();
+                if (tvSevereWeatherAlerts != null) tvSevereWeatherAlerts.setText("Error fetching hourly forecast");
             }
         }
     }
 
     private void updateForecastList(ArrayList<HourlyForecastItem> items) {
-        if (items.isEmpty()) {
-            Toast.makeText(this, "No forecast data available for " + selectedDay, Toast.LENGTH_SHORT).show();
+        if (lvHourlyForecast == null) return;
+        if (items == null || items.isEmpty()) {
+            lvHourlyForecast.setAdapter(null);
+        } else {
+            HourlyForecastAdapter adapter = new HourlyForecastAdapter(HourlyForecastActivity.this, items);
+            lvHourlyForecast.setAdapter(adapter);
         }
-        HourlyForecastAdapter adapter = new HourlyForecastAdapter(HourlyForecastActivity.this, items);
-        lvHourlyForecast.setAdapter(adapter);
     }
 
-    private class HourlyForecastItem {
-        String time;
-        String day;
-        double temperature;
-        String description;
+    private static class HourlyForecastItem {
+        String time, day, description, iconCode;
+        double temperature, windSpeed;
         int weatherId;
-        String iconCode;
-        double windSpeed;
         Date date;
-
-        HourlyForecastItem(String time, String day, double temperature, String description, int weatherId, String iconCode, double windSpeed, Date date) {
+        HourlyForecastItem(String time, String day, double temp, String desc, int id, String icon, double wind, Date dt) {
             this.time = time;
             this.day = day;
-            this.temperature = temperature;
-            this.description = description;
-            this.weatherId = weatherId;
-            this.iconCode = iconCode;
-            this.windSpeed = windSpeed;
-            this.date = date;
+            this.temperature = temp;
+            this.description = desc;
+            this.weatherId = id;
+            this.iconCode = icon;
+            this.windSpeed = wind;
+            this.date = dt;
         }
     }
 
     private class HourlyForecastAdapter extends ArrayAdapter<HourlyForecastItem> {
-        private final ArrayList<HourlyForecastItem> items;
-
         HourlyForecastAdapter(Context context, ArrayList<HourlyForecastItem> items) {
             super(context, 0, items);
-            this.items = items;
         }
 
         @Override
@@ -348,95 +370,57 @@ public class HourlyForecastActivity extends AppCompatActivity {
             if (convertView == null) {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item_hourly_forecast, parent, false);
             }
-
-            HourlyForecastItem item = items.get(position);
+            HourlyForecastItem item = getItem(position);
             TextView tvHourlyForecast = convertView.findViewById(R.id.tvHourlyForecast);
             ImageView ivHourlyIcon = convertView.findViewById(R.id.ivHourlyIcon);
-
-            tvHourlyForecast.setText(String.format("%s - %s: %.1f°C, %s", item.time, item.day, item.temperature, capitalizeFirstLetter(item.description)));
-            tvHourlyForecast.setTextColor(android.graphics.Color.parseColor("#212121"));
-            tvHourlyForecast.setPadding(16, 12, 16, 12);
-
-            setHourlyIcon(ivHourlyIcon, item.weatherId, item.iconCode, item.description, item.windSpeed, item.date);
-
+            if (item != null) {
+                tvHourlyForecast.setText(String.format(Locale.getDefault(), "%s - %s: %.1f°C, %s", item.time, item.day, item.temperature, capitalizeFirstLetter(item.description)));
+                tvHourlyForecast.setTextColor(Color.parseColor("#212121"));
+                setHourlyIcon(ivHourlyIcon, item.weatherId, item.iconCode, item.description, item.windSpeed, item.date);
+            }
             return convertView;
         }
     }
 
     private void setHourlyIcon(ImageView imageView, int weatherId, String iconCode, String description, double windSpeed, Date forecastDate) {
+        if (imageView == null || description == null || forecastDate == null) return;
         int resourceId;
-
         try {
-            Log.d("WeatherApp", "Weather - Time: " + description + ", Weather ID: " + weatherId + ", Icon Code: " + iconCode);
-
             boolean isDayTime = isDayTime(forecastDate);
-            Log.d("WeatherApp", "Forecast Time: " + forecastDate + ", Is Daytime: " + isDayTime);
-
-            if (windSpeed > 10) {
-                resourceId = R.drawable.windy_icon;
-            } else if (weatherId >= 200 && weatherId < 300) {
-                resourceId = R.drawable.thunder_icon;
-            } else if (weatherId >= 300 && weatherId < 400) {
-                resourceId = R.drawable.rain_icon;
-            } else if (weatherId >= 500 && weatherId < 600) {
-                if (weatherId == 500 || weatherId == 501 || description.toLowerCase().contains("light rain")) {
-                    resourceId = R.drawable.light_rain_icon;
-                } else {
-                    resourceId = R.drawable.heavy_rain_icon;
-                }
-            } else if (weatherId >= 600 && weatherId < 700) {
-                resourceId = R.drawable.snow_icon;
-            } else if (weatherId >= 700 && weatherId < 800) {
-                if (weatherId == 741 || description.toLowerCase().contains("fog")) {
-                    resourceId = R.drawable.fog_icon;
-                } else {
-                    resourceId = R.drawable.mist_icon;
-                }
-            } else if (weatherId == 800) {
-                if (isDayTime) {
-                    resourceId = R.drawable.sun_icon;
-                } else {
-                    resourceId = R.drawable.moon_icon;
-                }
-            } else if (weatherId > 800) {
-                if (weatherId == 801) {
-                    resourceId = R.drawable.partly_cloudy_icon;
-                } else if (weatherId == 802 || weatherId == 803 || weatherId == 804) {
-                    if (description.toLowerCase().contains("broken clouds")) {
-                        resourceId = R.drawable.broken_clouds_icon;
-                    } else {
-                        resourceId = R.drawable.cloud_icon;
-                    }
-                } else {
-                    resourceId = R.drawable.cloud_icon;
-                }
-            } else {
-                resourceId = R.drawable.sun_icon;
-            }
+            if (windSpeed > 10) resourceId = R.drawable.windy_icon;
+            else if (weatherId >= 200 && weatherId < 300) resourceId = R.drawable.thunder_icon;
+            else if (weatherId >= 300 && weatherId < 400) resourceId = R.drawable.rain_icon;
+            else if (weatherId >= 500 && weatherId < 600) resourceId = (weatherId <= 501 || description.toLowerCase(Locale.ROOT).contains("light rain")) ? R.drawable.light_rain_icon : R.drawable.heavy_rain_icon;
+            else if (weatherId >= 600 && weatherId < 700) resourceId = R.drawable.snow_icon;
+            else if (weatherId >= 700 && weatherId < 800) resourceId = (weatherId == 741 || description.toLowerCase(Locale.ROOT).contains("fog")) ? R.drawable.fog_icon : R.drawable.mist_icon;
+            else if (weatherId == 800) resourceId = isDayTime ? R.drawable.sun_icon : R.drawable.moon_icon;
+            else if (weatherId > 800 && weatherId < 900) {
+                if (weatherId == 801) resourceId = R.drawable.partly_cloudy_icon;
+                else if (weatherId <= 804) resourceId = description.toLowerCase(Locale.ROOT).contains("broken clouds") ? R.drawable.broken_clouds_icon : R.drawable.cloud_icon;
+                else resourceId = R.drawable.cloud_icon;
+            } else resourceId = isDayTime ? R.drawable.sun_icon : R.drawable.cloud_icon;
             imageView.setImageResource(resourceId);
         } catch (Exception e) {
-            Log.w("WeatherApp", "Icon resource not found for " + description + ": " + e.getMessage());
+            Log.w("WeatherApp", "Icon resource error for " + description + ": " + e.getMessage());
             imageView.setImageResource(R.drawable.cloud_icon);
         }
     }
 
     private boolean isDayTime(Date forecastDate) {
+        if (forecastDate == null) return true;
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(forecastDate);
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        return hour >= 6 && hour < 18;
+        return calendar.get(Calendar.HOUR_OF_DAY) >= 6 && calendar.get(Calendar.HOUR_OF_DAY) < 18;
     }
 
     private String capitalizeFirstLetter(String text) {
-        if (text == null || text.isEmpty()) {
-            return text;
-        }
-        return text.substring(0, 1).toUpperCase() + text.substring(1);
+        if (text == null || text.isEmpty()) return "";
+        return text.substring(0, 1).toUpperCase(Locale.ROOT) + text.substring(1);
     }
 
     private String getDayOfWeek(Date date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("EEEE", Locale.getDefault());
-        return sdf.format(date);
+        if (date == null) return "Unknown Day";
+        return new SimpleDateFormat("EEEE", Locale.getDefault()).format(date);
     }
 
     public void setSelectedDay(String day) {
@@ -444,7 +428,8 @@ public class HourlyForecastActivity extends AppCompatActivity {
         if (forecastByDay != null) {
             updateForecastList(forecastByDay.getOrDefault(selectedDay, new ArrayList<>()));
         } else {
-            new FetchCoordinatesTask().execute(city);
+            if (city != null) new FetchCoordinatesTask().execute(city);
+            else if (tvSevereWeatherAlerts != null) tvSevereWeatherAlerts.setText("City not set, cannot refresh forecast.");
         }
     }
 }
