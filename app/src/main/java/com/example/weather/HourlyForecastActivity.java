@@ -46,6 +46,7 @@ public class HourlyForecastActivity extends AppCompatActivity {
 
     private ListView lvHourlyForecast;
     private TextView tvSevereWeatherAlerts;
+    private TextView tvHourlyHeaderCustom;
     private String city;
     private String forecastData;
     private String selectedDay;
@@ -73,8 +74,11 @@ public class HourlyForecastActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_hourly_forecast);
 
-        // Adjust status bar placeholder height dynamically using WindowInsets
+        // Find the header TextView and status bar placeholder
+        tvHourlyHeaderCustom = findViewById(R.id.tvHourlyHeaderCustom);
         final View statusBarPlaceholder = findViewById(R.id.statusBarPlaceholderHourly);
+
+        // Adjust the status bar placeholder height dynamically
         ViewCompat.setOnApplyWindowInsetsListener(statusBarPlaceholder, (v, windowInsets) -> {
             androidx.core.graphics.Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
             ViewGroup.LayoutParams params = v.getLayoutParams();

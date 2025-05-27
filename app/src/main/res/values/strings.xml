@@ -4,6 +4,7 @@
     <string name="hint_city_name">Enter city name</string>
     <string name="btn_search">Search</string>
     <string name="forecast_title">3-Day Forecast</string>
+    <string name="hourly_forecast_title">Hourly Forecast</string> <!-- Added here -->
     <string name="invalid_city_name">Invalid city name</string>
     <string name="enter_city_name">Please enter a city name</string>
     <string name="error_hourly_forecast">Failed to open hourly forecast</string>
@@ -16,10 +17,9 @@
     <string name="forecast_parsing_error">Forecast parsing error</string>
     <string name="error_fetching_forecast">Error fetching forecast data</string>
     <string name="error_fetching_map">Error fetching weather map</string>
+    <string name="humidity_template">Humidity: %d%%</string>
+    <string name="wind_template">Wind: %.1f m/s</string>
     <string name="weather_icon_description">Current weather icon</string>
     <string name="forecast_icon_description">Forecast weather icon</string>
     <string name="weather_map_description">Precipitation map</string>
-    <!-- Dynamic text templates -->
-    <string name="humidity_template">Humidity: %d%%</string>
-    <string name="wind_template">Wind: %.1f m/s</string>
 </resources>

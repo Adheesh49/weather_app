@@ -2,12 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/background_light">
 
-    <View
-        android:id="@+id/statusBarPlaceholderHourly"
-        android:layout_width="match_parent"
-        android:layout_height="0dp" />
+
 
     <TextView
         android:id="@+id/tvHourlyHeaderCustom"
@@ -15,37 +13,48 @@
         android:layout_height="?attr/actionBarSize"
         android:background="@color/my_app_green"
         android:text="Hourly Forecast"
-        android:textColor="@android:color/white"
+        android:textColor="@color/text_primary_light"
         android:textSize="20sp"
         android:textStyle="bold"
         android:gravity="center_vertical"
         android:paddingStart="16dp"
-        android:paddingEnd="16dp"/>
+        android:paddingEnd="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:elevation="4dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:background="@color/my_app_green_light">
 
         <TextView
             android:id="@+id/tvSevereWeatherAlerts"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="No severe weather alerts"
-            android:textColor="#F4ECEC"
+            android:textColor="@color/alert_text_color"
             android:textSize="16sp"
-            android:padding="8dp"
-            android:background="#EF0101"
-            android:layout_marginBottom="8dp"
-            android:visibility="visible"/>
+            android:padding="12dp"
+            android:background="@drawable/rounded_alert_background"
+            android:layout_marginBottom="16dp"
+            android:visibility="visible"
+            android:drawableStart="@android:drawable/ic_dialog_alert"
+            android:drawablePadding="8dp"
+            android:gravity="center_vertical"/>
 
         <ListView
             android:id="@+id/lvHourlyForecast"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="@color/white" />
+            android:background="@android:color/transparent"
+            android:divider="@null"
+            android:dividerHeight="0dp"
+            android:clipToPadding="false"
+            android:scrollbarStyle="outsideOverlay"/>
     </LinearLayout>
 </LinearLayout>
