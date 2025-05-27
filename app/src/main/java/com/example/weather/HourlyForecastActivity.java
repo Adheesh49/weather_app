@@ -5,7 +5,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,6 +12,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -20,9 +24,8 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsCompat;
+
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -63,29 +66,34 @@ public class HourlyForecastActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Enable edge-to-edge display and make status bar transparent
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().setStatusBarColor(Color.TRANSPARENT);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowInsetsControllerCompat windowInsetsController =
+                    WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+            if (windowInsetsController != null) {
+                windowInsetsController.hide(WindowInsetsCompat.Type.statusBars());
+                windowInsetsController.setSystemBarsBehavior(
+                        WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                );
+            }
+        } else {
+            // For older APIs (before Android 11)
+            getWindow().setFlags(
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN
+            );
         }
+
+
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
 
         setContentView(R.layout.activity_hourly_forecast);
 
-        // Find the header TextView and status bar placeholder
         tvHourlyHeaderCustom = findViewById(R.id.tvHourlyHeaderCustom);
-        final View statusBarPlaceholder = findViewById(R.id.statusBarPlaceholderHourly);
 
-        // Adjust the status bar placeholder height dynamically
-        ViewCompat.setOnApplyWindowInsetsListener(statusBarPlaceholder, (v, windowInsets) -> {
-            androidx.core.graphics.Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-            ViewGroup.LayoutParams params = v.getLayoutParams();
-            params.height = insets.top;
-            v.setLayoutParams(params);
-            return windowInsets;
-        });
+
+
 
         lvHourlyForecast = findViewById(R.id.lvHourlyForecast);
         tvSevereWeatherAlerts = findViewById(R.id.tvSevereWeatherAlerts);
@@ -375,11 +383,11 @@ public class HourlyForecastActivity extends AppCompatActivity {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item_hourly_forecast, parent, false);
             }
             HourlyForecastItem item = getItem(position);
-            TextView tvHourlyForecast = convertView.findViewById(R.id.tvHourlyForecast);
+            TextView tvHourlyForecastTextInItem = convertView.findViewById(R.id.tvHourlyForecast);
             ImageView ivHourlyIcon = convertView.findViewById(R.id.ivHourlyIcon);
             if (item != null) {
-                tvHourlyForecast.setText(String.format(Locale.getDefault(), "%s - %s: %.1f°C, %s", item.time, item.day, item.temperature, capitalizeFirstLetter(item.description)));
-                tvHourlyForecast.setTextColor(Color.parseColor("#212121"));
+                tvHourlyForecastTextInItem.setText(String.format(Locale.getDefault(), "%s - %s: %.1f°C, %s", item.time, item.day, item.temperature, capitalizeFirstLetter(item.description)));
+                tvHourlyForecastTextInItem.setTextColor(getResources().getColor(R.color.text_primary_dark));
                 setHourlyIcon(ivHourlyIcon, item.weatherId, item.iconCode, item.description, item.windSpeed, item.date);
             }
             return convertView;
@@ -414,7 +422,8 @@ public class HourlyForecastActivity extends AppCompatActivity {
         if (forecastDate == null) return true;
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(forecastDate);
-        return calendar.get(Calendar.HOUR_OF_DAY) >= 6 && calendar.get(Calendar.HOUR_OF_DAY) < 18;
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        return hour >= 6 && hour < 18;
     }
 
     private String capitalizeFirstLetter(String text) {
@@ -432,8 +441,11 @@ public class HourlyForecastActivity extends AppCompatActivity {
         if (forecastByDay != null) {
             updateForecastList(forecastByDay.getOrDefault(selectedDay, new ArrayList<>()));
         } else {
-            if (city != null) new FetchCoordinatesTask().execute(city);
-            else if (tvSevereWeatherAlerts != null) tvSevereWeatherAlerts.setText("City not set, cannot refresh forecast.");
+            if (city != null) {
+                new FetchCoordinatesTask().execute(city);
+            } else if (tvSevereWeatherAlerts != null) {
+                tvSevereWeatherAlerts.setText("City not set, cannot refresh forecast.");
+            }
         }
     }
 }
