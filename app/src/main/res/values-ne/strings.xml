@@ -4,6 +4,7 @@
     <string name="hint_city_name">सहरको नाम प्रविष्ट गर्नुहोस्</string>
     <string name="btn_search">खोज्नुहोस्</string>
     <string name="forecast_title">३-दिन मौसम पूर्वानुमान</string>
+    <string name="hourly_forecast_title">प्रति घण्टा मौसम पूर्वानुमान</string>
     <string name="invalid_city_name">अवैध सहरको नाम</string>
     <string name="enter_city_name">कृपया सहरको नाम प्रविष्ट गर्नुहोस्</string>
     <string name="error_hourly_forecast">हवाइ पूर्वानुमान खोल्न असफल</string>
@@ -16,7 +17,9 @@
     <string name="forecast_parsing_error">मौसम पूर्वानुमान पार्सिङ त्रुटि</string>
     <string name="error_fetching_forecast">मौसम पूर्वानुमान डेटा ल्याउन त्रुटि</string>
     <string name="error_fetching_map">मौसम नक्शा ल्याउन त्रुटि</string>
-    <!-- Dynamic text templates -->
     <string name="humidity_template">आर्द्रता: %d%%</string>
     <string name="wind_template">हावा: %.1f मि/से</string>
+    <string name="weather_icon_description">हालको मौसम आइकन</string>
+    <string name="forecast_icon_description">मौसम पूर्वानुमान आइकन</string>
+    <string name="weather_map_description">वर्षा नक्शा</string>
 </resources>

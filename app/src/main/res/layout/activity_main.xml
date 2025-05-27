@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Background layers for gradient animation -->
+    <!-- Backgrounds for transition -->
     <View
         android:id="@+id/backgroundOld"
         android:layout_width="match_parent"
@@ -16,14 +16,12 @@
         android:layout_height="match_parent"
         android:alpha="0" />
 
-    <!-- Status bar placeholder -->
+    <!-- Status Bar Placeholder -->
     <View
         android:id="@+id/statusBarPlaceholder"
         android:layout_width="match_parent"
-        android:layout_height="25dp"
-        android:background="#4CAF50" />
+        android:layout_height="25dp" />
 
-    <!-- ScrollView for content -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -36,47 +34,71 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Add Weather App title -->
+            <!-- App Title -->
             <TextView
-                android:layout_width="413dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginBottom="16dp"
-                android:background="#4CAF50"
+                android:layout_marginBottom="20dp"
+                android:background="@android:color/transparent"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:text="@string/app_name"
                 android:textAlignment="center"
-                android:textColor="#FFFFFF"
-                android:textSize="28sp"
-                android:textStyle="bold" />
+                android:textColor="@android:color/white"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                android:shadowColor="#80000000"
+                android:shadowDx="1"
+                android:shadowDy="1"
+                android:shadowRadius="2"/>
 
-            <!-- City input and search button -->
-            <EditText
+            <!-- City Input - Changed to AutoCompleteTextView as per previous request -->
+            <AutoCompleteTextView
                 android:id="@+id/etCityName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/hint_city_name"
-                android:inputType="text"
-                android:padding="8dp" />
+                android:inputType="textCapWords"
+                android:maxLines="1"
+                android:completionThreshold="2"
+                android:padding="12dp"
+                android:background="@drawable/edit_text_background_rounded"
+                android:textColor="@android:color/white"
+                android:textColorHint="#B3FFFFFF"
+                android:layout_marginBottom="12dp"/>
 
+            <!-- Search Button -->
             <Button
                 android:id="@+id/btnSearch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="8dp"
-                android:text="@string/btn_search" />
+                android:layout_marginBottom="24dp"
+                android:paddingLeft="30dp"
+                android:paddingRight="30dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:background="@drawable/button_background_rounded"
+                android:text="@string/btn_search"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"/>
 
-            <!-- Current weather info -->
+            <!-- Current Weather Info -->
             <TextView
                 android:id="@+id/tvCityName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="16dp"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:textColor="@android:color/white"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:shadowColor="#80000000"
+                android:shadowDx="1"
+                android:shadowDy="1"
+                android:shadowRadius="2"/>
 
             <TextView
                 android:id="@+id/tvDate"
@@ -84,28 +106,38 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="8dp"
-                android:textSize="16sp" />
+                android:textColor="#E6FFFFFF"
+                android:textSize="16sp"
+                android:shadowColor="#80000000"
+                android:shadowDx="0.5"
+                android:shadowDy="0.5"
+                android:shadowRadius="1"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:layout_marginTop="16dp">
+                android:layout_marginTop="20dp">
 
                 <ImageView
                     android:id="@+id/ivWeatherIcon"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:contentDescription="Weather Icon" />
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:contentDescription="@string/weather_icon_description" />
 
                 <TextView
                     android:id="@+id/tvTemperature"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:textSize="36sp"
-                    android:textStyle="bold" />
+                    android:textColor="@android:color/white"
+                    android:textSize="48sp"
+                    android:textStyle="bold"
+                    android:shadowColor="#80000000"
+                    android:shadowDx="1"
+                    android:shadowDy="1"
+                    android:shadowRadius="3"/>
             </LinearLayout>
 
             <TextView
@@ -113,8 +145,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginTop="8dp"
-                android:textSize="18sp" />
+                android:layout_marginTop="10dp"
+                android:textColor="@android:color/white"
+                android:textSize="20sp"
+                android:shadowColor="#80000000"
+                android:shadowDx="0.5"
+                android:shadowDy="0.5"
+                android:shadowRadius="1"/>
 
             <TextView
                 android:id="@+id/tvHumidity"
@@ -122,7 +159,12 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="8dp"
-                android:textSize="16sp" />
+                android:textColor="#E6FFFFFF"
+                android:textSize="16sp"
+                android:shadowColor="#80000000"
+                android:shadowDx="0.5"
+                android:shadowDy="0.5"
+                android:shadowRadius="1"/>
 
             <TextView
                 android:id="@+id/tvWind"
@@ -130,29 +172,45 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="8dp"
-                android:textSize="16sp" />
+                android:layout_marginBottom="24dp"
+                android:textColor="#E6FFFFFF"
+                android:textSize="16sp"
+                android:shadowColor="#80000000"
+                android:shadowDx="0.5"
+                android:shadowDy="0.5"
+                android:shadowRadius="1"/>
 
-            <!-- 3-Day forecast section -->
+            <!-- Forecast Section -->
             <LinearLayout
                 android:id="@+id/forecastSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="8dp">
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/card_view_background" > <!-- Optional subtle card background -->
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/forecast_title"
-                    android:textSize="18sp"
+                    android:textSize="20sp"
                     android:textStyle="bold"
-                    android:layout_gravity="center"/>
+                    android:layout_gravity="center"
+                    android:textColor="@android:color/white"
+                    android:shadowColor="#80000000"
+                    android:shadowDx="1"
+                    android:shadowDy="1"
+                    android:shadowRadius="2"
+                    android:layout_marginBottom="10dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center">
+                    android:gravity="center_vertical"
+                    android:baselineAligned="false">
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -163,16 +221,21 @@
 
                         <ImageView
                             android:id="@+id/ivForecastIcon1"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:contentDescription="Forecast Icon 1" />
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:contentDescription="@string/forecast_icon_description" />
 
                         <TextView
                             android:id="@+id/tvForecast1"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textSize="14sp"
-                            android:gravity="center" />
+                            android:textColor="#E6FFFFFF"
+                            android:gravity="center"
+                            android:shadowColor="#80000000"
+                            android:shadowDx="0.5"
+                            android:shadowDy="0.5"
+                            android:shadowRadius="1"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -184,16 +247,21 @@
 
                         <ImageView
                             android:id="@+id/ivForecastIcon2"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:contentDescription="Forecast Icon 2" />
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:contentDescription="@string/forecast_icon_description" />
 
                         <TextView
                             android:id="@+id/tvForecast2"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textSize="14sp"
-                            android:gravity="center" />
+                            android:textColor="#E6FFFFFF"
+                            android:gravity="center"
+                            android:shadowColor="#80000000"
+                            android:shadowDx="0.5"
+                            android:shadowDy="0.5"
+                            android:shadowRadius="1"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -205,48 +273,54 @@
 
                         <ImageView
                             android:id="@+id/ivForecastIcon3"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:contentDescription="Forecast Icon 3" />
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:contentDescription="@string/forecast_icon_description" />
 
                         <TextView
                             android:id="@+id/tvForecast3"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textSize="14sp"
-                            android:gravity="center" />
+                            android:textColor="#E6FFFFFF"
+                            android:gravity="center"
+                            android:shadowColor="#80000000"
+                            android:shadowDx="0.5"
+                            android:shadowDy="0.5"
+                            android:shadowRadius="1"/>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- ProgressBar -->
+            <!-- Progress Bar -->
             <ProgressBar
                 android:id="@+id/progressBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="16dp"
+                android:indeterminateTint="@android:color/white"
                 android:visibility="gone" />
 
-            <!-- Weather map -->
+            <!-- Weather Map -->
             <ImageView
                 android:id="@+id/ivWeatherMap"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
                 android:layout_marginTop="16dp"
-                android:contentDescription="Weather Map"
+                android:contentDescription="@string/weather_map_description"
                 android:scaleType="centerCrop" />
 
-            <!-- Severe weather alert -->
+            <!-- Alert Section -->
             <LinearLayout
                 android:id="@+id/alertSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:visibility="gone"
-                android:layout_marginTop="16dp"
-                android:background="@android:color/holo_red_light"
-                android:padding="8dp">
+                android:layout_marginTop="20dp"
+                android:background="@drawable/alert_background_rounded"
+                android:padding="12dp"> <!-- Padding is now in the drawable, can remove/adjust here -->
 
                 <TextView
                     android:id="@+id/tvAlert"
@@ -255,7 +329,12 @@
                     android:layout_gravity="center"
                     android:text="@string/error_fetching_alerts"
                     android:textSize="16sp"
-                    android:textColor="@android:color/white" />
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+                    android:shadowColor="#BF000000"
+                    android:shadowDx="1"
+                    android:shadowDy="1"
+                    android:shadowRadius="1.5"/>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
