@@ -44,6 +44,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.TimeZone;
+
 
 public class HourlyForecastActivity extends AppCompatActivity {
 
@@ -92,9 +94,6 @@ public class HourlyForecastActivity extends AppCompatActivity {
 
         tvHourlyHeaderCustom = findViewById(R.id.tvHourlyHeaderCustom);
 
-
-
-
         lvHourlyForecast = findViewById(R.id.lvHourlyForecast);
         tvSevereWeatherAlerts = findViewById(R.id.tvSevereWeatherAlerts);
         city = getIntent().getStringExtra("city");
@@ -136,31 +135,45 @@ public class HourlyForecastActivity extends AppCompatActivity {
     }
 
     private HashMap<String, ArrayList<HourlyForecastItem>> parseForecastData(String jsonData) {
+
+        final String LOG_TAG = "WeatherApp"; // Or use your class TAG
+
+        if (jsonData == null || jsonData.isEmpty()) {
+            Log.e(LOG_TAG, "jsonData is null or empty in parseForecastData.");
+            return null;
+        }
         try {
             HashMap<String, ArrayList<HourlyForecastItem>> forecastMap = new HashMap<>();
             JSONObject jsonObject = new JSONObject(jsonData);
             JSONArray listArray = jsonObject.getJSONArray("list");
-            SimpleDateFormat sdfInput = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-            SimpleDateFormat sdfDay = new SimpleDateFormat("EEEE", Locale.getDefault());
-            SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+
+            SimpleDateFormat sdfInputUtc = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+            sdfInputUtc.setTimeZone(TimeZone.getTimeZone("UTC")); // Tell SimpleDateFormat the input string is UTC
+
+            SimpleDateFormat sdfDayLocal = new SimpleDateFormat("EEEE", Locale.getDefault());
+
+            SimpleDateFormat sdfTimeLocal = new SimpleDateFormat("HH:mm", Locale.getDefault()); // For 24-hour format like "15:00"
 
             for (int i = 0; i < listArray.length(); i++) {
                 JSONObject forecastObj = listArray.getJSONObject(i);
-                String dtTxt = forecastObj.getString("dt_txt");
-                Date date = sdfInput.parse(dtTxt);
-                String day = sdfDay.format(date);
+                String dtTxt = forecastObj.getString("dt_txt"); // This is a UTC string, e.g., "2025-05-28 12:00:00"
+                Date utcDate = sdfInputUtc.parse(dtTxt); // 'utcDate' now correctly represents the UTC moment in time
+                String localDayName = sdfDayLocal.format(utcDate);
+                String localTimeForDisplay = sdfTimeLocal.format(utcDate);
                 double temp = forecastObj.getJSONObject("main").getDouble("temp");
                 String desc = forecastObj.getJSONArray("weather").getJSONObject(0).getString("description");
                 int weatherId = forecastObj.getJSONArray("weather").getJSONObject(0).getInt("id");
                 String iconCode = forecastObj.getJSONArray("weather").getJSONObject(0).getString("icon");
                 double windSpeed = forecastObj.getJSONObject("wind").getDouble("speed");
-                String time = sdfTime.format(date);
-                HourlyForecastItem item = new HourlyForecastItem(time, day, temp, desc, weatherId, iconCode, windSpeed, date);
-                forecastMap.computeIfAbsent(day, k -> new ArrayList<>()).add(item);
+
+
+                HourlyForecastItem item = new HourlyForecastItem(localTimeForDisplay, localDayName, temp, desc, weatherId, iconCode, windSpeed, utcDate);
+                forecastMap.computeIfAbsent(localDayName, k -> new ArrayList<>()).add(item);
             }
             return forecastMap;
         } catch (JSONException | ParseException e) {
-            Log.e("WeatherApp", "JSON or date parsing error in parseForecastData: " + e.getMessage());
+            Log.e(LOG_TAG, "JSON or date parsing error in parseForecastData: " + e.getMessage(), e);
             return null;
         }
     }
