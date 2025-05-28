@@ -4,7 +4,7 @@
     <string name="hint_city_name">Enter city name</string>
     <string name="btn_search">Search</string>
     <string name="forecast_title">3-Day Forecast</string>
-    <string name="hourly_forecast_title">Hourly Forecast</string> <!-- Added here -->
+    <string name="hourly_forecast_title">Hourly Forecast</string>
     <string name="invalid_city_name">Invalid city name</string>
     <string name="enter_city_name">Please enter a city name</string>
     <string name="error_hourly_forecast">Failed to open hourly forecast</string>
@@ -22,4 +22,7 @@
     <string name="weather_icon_description">Current weather icon</string>
     <string name="forecast_icon_description">Forecast weather icon</string>
     <string name="weather_map_description">Precipitation map</string>
+    <string name="day_prefix">Day</string>
+    <string name="current_date_time">Current Date and Time</string>
+    <string name="no_severe_weather_alerts">No severe weather alerts</string> >
 </resources>

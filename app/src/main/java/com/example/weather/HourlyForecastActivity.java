@@ -298,7 +298,7 @@ public class HourlyForecastActivity extends AppCompatActivity {
                     tvSevereWeatherAlerts.setVisibility(View.VISIBLE);
                 }
             } else {
-                tvSevereWeatherAlerts.setText("Error fetching severe weather alerts");
+                tvSevereWeatherAlerts.setText("No severe weather alerts");
                 tvSevereWeatherAlerts.setVisibility(View.VISIBLE);
             }
         }
