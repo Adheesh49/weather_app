@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Backgrounds for transition -->
     <View
         android:id="@+id/backgroundOld"
         android:layout_width="match_parent"
@@ -16,7 +15,6 @@
         android:layout_height="match_parent"
         android:alpha="0" />
 
-    <!-- Status Bar Placeholder -->
     <View
         android:id="@+id/statusBarPlaceholder"
         android:layout_width="match_parent"
@@ -34,7 +32,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- App Title -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -53,7 +50,6 @@
                 android:shadowDy="1"
                 android:shadowRadius="2"/>
 
-            <!-- City Input - Changed to AutoCompleteTextView as per previous request -->
             <AutoCompleteTextView
                 android:id="@+id/etCityName"
                 android:layout_width="match_parent"
@@ -68,7 +64,6 @@
                 android:textColorHint="#B3FFFFFF"
                 android:layout_marginBottom="12dp"/>
 
-            <!-- Search Button -->
             <Button
                 android:id="@+id/btnSearch"
                 android:layout_width="wrap_content"
@@ -85,7 +80,6 @@
                 android:textColor="@android:color/white"
                 android:textStyle="bold"/>
 
-            <!-- Current Weather Info -->
             <TextView
                 android:id="@+id/tvCityName"
                 android:layout_width="wrap_content"
@@ -189,7 +183,7 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:layout_marginBottom="16dp"
-                android:background="@drawable/card_view_background" > <!-- Optional subtle card background -->
+                android:background="@drawable/card_view_background" >
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -320,7 +314,7 @@
                 android:visibility="gone"
                 android:layout_marginTop="20dp"
                 android:background="@drawable/alert_background_rounded"
-                android:padding="12dp"> <!-- Padding is now in the drawable, can remove/adjust here -->
+                android:padding="12dp">
 
                 <TextView
                     android:id="@+id/tvAlert"

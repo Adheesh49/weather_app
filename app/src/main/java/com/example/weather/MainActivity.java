@@ -14,7 +14,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText; // Using EditText as per your original structure
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private View backgroundOld, backgroundNew;
 
     // OpenWeatherMap API key
-    private final String API_KEY = "dad72bbf3ec207a8585ff3b7dcbcf9a8"; // Replace with your API key
+    private final String API_KEY = "dad72bbf3ec207a8585ff3b7dcbcf9a8";
     // URLs for APIs
     private final String WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather";
     private final String FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast";
